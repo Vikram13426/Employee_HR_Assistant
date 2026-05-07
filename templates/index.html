@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HR AI Assistant</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <!-- BACKGROUND BLUR CIRCLES -->
+
+    <div class="bg-blur blur1"></div>
+    <div class="bg-blur blur2"></div>
+
+
+
+    <div class="main-layout">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="logo-area">
+
+                <div class="logo-icon">
+                    ✦
+                </div>
+
+                <div>
+                    <h1>HR AI</h1>
+                    <p>Policy Explainer</p>
+                </div>
+
+            </div>
+
+
+
+            <div class="upload-card">
+
+                <div class="upload-icon">
+                    📄
+                </div>
+
+                <h2>Upload Documents</h2>
+
+                <p>
+                    Drag & drop HR PDFs or click below
+                </p>
+
+                <div class="upload-box" id="uploadBox">
+
+                    <input
+                        type="file"
+                        id="pdfInput"
+                        accept=".pdf"
+                        hidden
+                    >
+
+                    <span>Choose PDF</span>
+
+                </div>
+
+                <button onclick="uploadPDF()">
+                    Upload PDF
+                </button>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <h3>Features</h3>
+
+                <ul>
+
+                    <li>AI HR Chatbot</li>
+
+                    <li>Offer Letter Analysis</li>
+
+                    <li>Policy Q&A</li>
+
+                    <li>RAG + ChromaDB</li>
+
+                    <li>Gemini AI Responses</li>
+
+                </ul>
+
+            </div>
+
+        </aside>
+
+
+
+
+        <!-- CHAT AREA -->
+
+        <section class="chat-section">
+
+
+            <!-- TOP BAR -->
+
+            <div class="topbar">
+
+                <div>
+
+                    <h2>Employee HR Assistant</h2>
+
+                    <p>AI-powered HR policy and offer letter assistant</p>
+
+                </div>
+
+
+                <div class="status-badge">
+                    ● Online
+                </div>
+
+            </div>
+
+
+
+
+            <!-- CHAT BOX -->
+
+            <div id="chatBox">
+
+                <div class="message bot">
+
+                    👋 Welcome to HR AI Assistant
+
+                    <br><br>
+
+                    Upload your HR policies or offer letters and ask questions like:
+
+                    <br><br>
+
+                    • What is the leave policy?
+                    <br>
+                    • What benefits are included?
+                    <br>
+                    • Explain the probation period
+                    <br>
+                    • Is work from home allowed?
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- INPUT AREA -->
+
+            <div class="input-area">
+
+                <div class="input-wrapper">
+
+                    <input
+                        type="text"
+                        id="question"
+                        placeholder="Ask HR-related questions..."
+                    >
+
+                </div>
+
+                <button onclick="askQuestion()">
+                    Send
+                </button>
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
