@@ -173,7 +173,7 @@ function addMessage(text, sender) {
 
     messageDiv.classList.add('message', sender);
 
-    messageDiv.innerText = text;
+    messageDiv.innerHTML = formatMessage(text);
 
     chatBox.appendChild(messageDiv);
 
@@ -259,4 +259,17 @@ function showToast(message) {
         }, 300);
 
     }, 2500);
+}
+function formatMessage(text) {
+
+    return text
+
+        // Bold text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
+        // Bullet points
+        .replace(/^\* (.*$)/gm, '<li>$1</li>')
+
+        // Convert line breaks
+        .replace(/\n/g, '<br>');
 }

@@ -420,3 +420,17 @@ input::placeholder{
         max-width:90%;
     }
 }
+.message strong{
+    color:#93c5fd;
+    font-weight:600;
+}
+
+.message li{
+    margin-left:18px;
+    margin-bottom:8px;
+    color:#e2e8f0;
+}
+
+.message br{
+    line-height:2;
+}
