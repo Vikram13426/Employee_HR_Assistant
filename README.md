@@ -283,11 +283,9 @@ This project helps in understanding:
 
 # Author
 
-Vicky  
-Final Year B.Tech CSE Student
+Vikram
+
 
 ---
 
-# License
 
-This project is open-source and intended for educational purposes.
