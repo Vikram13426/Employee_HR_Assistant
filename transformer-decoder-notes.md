@@ -1,556 +1,228 @@
-````md id="7mtnzk"
+```markdown
 # Transformer Decoder — Complete Step-by-Step Explanation
 
-# WHAT ENCODER DOES
+## What Encoder Does
 
-Encoder’s job:
+**Encoder’s job**: Understand the input sentence deeply.
 
-> Understand the input sentence deeply.
-
-Example input:
-
-```text id="9sjq9k"
-"I love AI"
-````
-
-Encoder processes all words and creates rich contextual vectors.
-
-Suppose encoder output becomes:
-
-```text id="u1q9mc"
-E1 = [0.5, 1.2]
-E2 = [1.4, 0.7]
-E3 = [2.0, 1.1]
-```
-
-These are NOT words anymore.
-
-These are:
-
-> context-rich representations
-
-The decoder will use these vectors.
-
----
-
-# NOW DECODER STARTS
-
-Suppose translation task:
-
-```text id="2zc0wl"
-English → French
-```
-
-Input:
-
-```text id="2q4qvy"
+**Example input:**
+```text
 "I love AI"
 ```
 
-Expected output:
+The Encoder processes all words and creates rich contextual vectors.
 
-```text id="wni9dr"
-"J'aime l'IA"
+Suppose encoder outputs:
+
+```text
+E1 ("I")   = [0.5, 1.2]
+E2 ("love")= [1.4, 0.7]
+E3 ("AI")  = [2.0, 1.1]
 ```
 
----
-
-# IMPORTANT DECODER IDEA
-
-Decoder generates:
-
-> ONE WORD AT A TIME
+These are **context-rich representations** of the input sentence.  
+The Decoder will use these vectors.
 
 ---
 
-# DURING TRAINING
+## Decoder Task
 
-Decoder input is shifted right.
+**Translation Example:**
 
-Example:
-
-## Decoder Input
-
-```text id="jqx2oe"
-<START> J'aime l'
-```
-
-## Target Output
-
-```text id="0e1b0t"
-J'aime l'IA
-```
+- **Input (English)**: "I love AI"
+- **Expected Output (French)**: "J'aime l'IA"
 
 ---
 
-# WHY SHIFTED RIGHT?
+## IMPORTANT DECODER IDEA
 
-Because decoder predicts:
+The Decoder generates **one word at a time**.
 
-> next word
+### During Training (Teacher Forcing)
 
----
+Decoder input is **shifted right**:
 
-# EXAMPLE
+- **Decoder Input**: `<START> J'aime l'`
+- **Target Output**: `J'aime l'IA`
 
-| Decoder Input       | Expected Output |
-| ------------------- | --------------- |
-| `<START>`           | `J'aime`        |
-| `<START> J'aime`    | `l'`            |
-| `<START> J'aime l'` | `IA`            |
+This forces the decoder to learn to predict the **next word**.
 
 ---
 
-# DECODER ARCHITECTURE
+## DECODER ARCHITECTURE
 
-Each decoder block contains:
+Each Decoder block contains:
 
-1. Masked Multi-Head Attention
-2. Add & Norm
-3. Cross Attention
-4. Add & Norm
-5. Feed Forward Network
-6. Add & Norm
-
-Now let’s go one by one.
+1. **Masked Multi-Head Self Attention**
+2. **Add & Norm**
+3. **Cross Attention** (with Encoder)
+4. **Add & Norm**
+5. **Feed Forward Network**
+6. **Add & Norm**
 
 ---
 
-# STEP 1 — MASKED SELF ATTENTION
+## STEP 1 — MASKED SELF ATTENTION
 
-Suppose decoder currently has:
-
-```text id="8u2f2o"
+When the decoder has:
+```text
 <START> J'aime
 ```
-
 and wants to predict the next word.
 
----
+### Why Masking?
 
-# WHY MASKING?
+The decoder must **NOT see future words** (no cheating during training).
 
-The decoder must NOT see future words.
+### Mask Example (for length = 4)
 
-Wrong example:
-
-```text id="4d2hlq"
-<START> J'aime l' IA
-```
-
-If model sees future words:
-
-* cheating happens
-* training becomes meaningless
-
----
-
-# MASK MATRIX
-
-Suppose sentence length = 4
-
-Mask matrix:
-
-```text id="4jlln2"
+```text
 1 0 0 0
 1 1 0 0
 1 1 1 0
 1 1 1 1
 ```
 
-Meaning:
-
-> current word can only see previous words
+**Rule**: Each word can only attend to itself and previous words.
 
 ---
 
-# DECODER SELF-ATTENTION FLOW
+## STEP 2 — ADD & NORMALIZATION
 
-Same as encoder:
-
-```text id="w7ahri"
-Embeddings
- ↓
-Q,K,V creation
- ↓
-Attention scores
- ↓
-Apply mask
- ↓
-Softmax
- ↓
-Weighted Values
-```
-
----
-
-# IMPORTANT DIFFERENCE
-
-## Encoder Attention
-
-```text id="r0jlwm"
-Every word sees every word
-```
-
-## Decoder Masked Attention
-
-```text id="v8shls"
-Word sees only previous words
-```
-
----
-
-# SIMPLE EXAMPLE
-
-Suppose decoder input:
-
-```text id="zlxmiv"
-<START> J'aime
-```
-
-When predicting next word:
-
-* “J'aime” can see `<START>`
-* but cannot see future word `l'`
-
-That is masking.
-
----
-
-# STEP 2 — ADD & NORMALIZATION
-
-Same as encoder.
-
-Formula:
-
-```text id="0uqqva"
+```text
 Output = LayerNorm(x + Attention(x))
 ```
 
-Why?
-
-* stabilizes training
-* preserves original information
+Helps stabilize training and preserves information flow.
 
 ---
 
-# STEP 3 — CROSS ATTENTION (MOST IMPORTANT)
+## STEP 3 — CROSS ATTENTION (Most Important)
 
-This is the special decoder part.
+This is the key link between Encoder and Decoder.
 
-Now decoder looks at:
+| Component     | Comes From     |
+|---------------|----------------|
+| **Query (Q)** | Decoder        |
+| **Key (K)**   | Encoder        |
+| **Value (V)** | Encoder        |
 
-> encoder outputs
+### Why Cross Attention?
 
----
+The Decoder asks: *"Which words from the input sentence are important right now for predicting the next output word?"*
 
-# WHY?
+**Example**: While generating "l'", the decoder strongly attends to encoder representation of **"love"**.
 
-Decoder needs source sentence meaning.
+**Formula** (same as self-attention):
+$$
+\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
 
-Example input sentence:
-
-```text id="3r3z7g"
-"I love AI"
-```
-
-Decoder generating:
-
-```text id="4x69h9"
-"J'aime ..."
-```
-
-To predict next French word correctly,
-decoder must look back at encoder understanding.
+Only difference: **Q comes from decoder**, **K & V come from encoder**.
 
 ---
 
-# CROSS ATTENTION FLOW
+## STEP 4 — FEED FORWARD NETWORK
 
-| Component | Comes From |
-| --------- | ---------- |
-| Query (Q) | Decoder    |
-| Key (K)   | Encoder    |
-| Value (V) | Encoder    |
+```text
+Linear → ReLU → Linear
+```
+
+Learns complex non-linear patterns.
 
 ---
 
-# VERY IMPORTANT UNDERSTANDING
+## STEP 5 — LINEAR LAYER (Vocabulary Projection)
 
-## In encoder self-attention:
+Takes the final hidden vector and projects it to **vocabulary size**.
 
-```text id="avt7ku"
-Q,K,V all come from encoder
-```
-
-## In cross attention:
-
-```text id="4r2x8u"
-Q comes from decoder
-K,V come from encoder
-```
+**Example**:
+- Hidden vector: `[2.1, 1.4, 0.3]`
+- Vocabulary: `["IA", "chat", "code"]`
+- Logits: `[5.2, 1.1, 0.3]`
 
 ---
 
-# WHY?
+## STEP 6 — SOFTMAX
 
-Decoder asks:
+Converts logits into probabilities:
 
-> “Which input words are important for predicting next output word?”
+```text
+[5.2, 1.1, 0.3]  →  [0.93, 0.05, 0.02]
+```
+
+**"IA" has 93% probability**
 
 ---
 
-# SIMPLE EXAMPLE
+## STEP 7 — OUTPUT TOKEN
 
-Input:
+Select the highest probability word → **"IA"**
 
-```text id="hj31o3"
-"I love AI"
-```
-
-Current decoder word:
-
-```text id="zyy79x"
-"J'aime"
-```
-
-Decoder Query may strongly match:
-
-> encoder representation of “love”
-
-So attention score becomes high there.
+Then append it to the generated sequence and repeat the process until `<END>` token is produced.
 
 ---
 
-# CROSS ATTENTION MATH
+## ENTIRE TRANSFORMER FLOW
 
-Same formula:
-
-\mathrm{Attention}(Q,K,V)=\mathrm{Softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
-
-Only difference:
-
-* Q from decoder
-* K,V from encoder
-
----
-
-# STEP 4 — FEED FORWARD NETWORK
-
-After attention:
-
-```text id="r09jtx"
-Linear
- ↓
-ReLU
- ↓
-Linear
-```
-
-This learns complex patterns.
-
----
-
-# STEP 5 — LINEAR LAYER
-
-Now decoder has final vector.
-
-Example:
-
-```text id="s5g6bf"
-[2.1, 1.4, 0.3]
-```
-
-Linear layer converts vector size into:
-
-> vocabulary size
-
-Suppose vocabulary has:
-
-```text id="zpb0hf"
-["IA", "chat", "code"]
-```
-
-Linear output:
-
-```text id="z07rt4"
-[5.2, 1.1, 0.3]
-```
-
-These are logits.
-
----
-
-# WHAT ARE LOGITS?
-
-> Raw prediction scores
-
-Higher score means:
-
-> more likely word
-
----
-
-# STEP 6 — SOFTMAX
-
-Softmax converts logits into probabilities.
-
-Input:
-
-```text id="y29cjr"
-[5.2, 1.1, 0.3]
-```
-
-Output:
-
-```text id="b3aq1m"
-[0.93, 0.05, 0.02]
-```
-
-Meaning:
-
-> “IA” has 93% probability
-
----
-
-# STEP 7 — OUTPUT TOKEN
-
-Highest probability word selected:
-
-```text id="pd4b0l"
-"IA"
-```
-
-Now generated sentence becomes:
-
-```text id="w8ed5d"
-"J'aime l'IA"
-```
-
----
-
-# THEN PROCESS REPEATS
-
-Decoder now feeds output back again.
-
-Loop:
-
-```text id="5u1r6o"
-Generated word
- ↓
-Added to decoder input
- ↓
-Masked attention
- ↓
-Cross attention
- ↓
-Linear
- ↓
-Softmax
- ↓
-Next word
-```
-
-until:
-
-```text id="kt4f5n"
-<END>
-```
-
-token appears.
-
----
-
-# ENTIRE TRANSFORMER FLOW TOGETHER
-
-```text id="x42it4"
+```text
 INPUT SENTENCE
- ↓
-Embedding
- ↓
-Positional Encoding
- ↓
-ENCODER SELF ATTENTION
- ↓
-Encoder Context Vectors
- ↓
---------------------------------
- ↓
-Decoder Input (<START>)
- ↓
-Masked Self Attention
- ↓
-Cross Attention with Encoder Output
- ↓
-Feed Forward Network
- ↓
-Linear Layer
- ↓
-Softmax
- ↓
-Predict Next Word
- ↓
-Repeat until END token
+        ↓
+   Embedding + Positional Encoding
+        ↓
+     ENCODER
+        ↓
+   Rich Context Vectors
+        ↓
+   ─────────────────────
+        ↓
+   DECODER INPUT (<START>)
+        ↓
+   Masked Self Attention
+        ↓
+   Cross Attention (with Encoder)
+        ↓
+   Feed Forward Network
+        ↓
+   Linear Layer → Softmax
+        ↓
+   Predict Next Word
+        ↓
+   Repeat until <END> token
 ```
 
 ---
 
-# GOLDEN UNDERSTANDING
+## KEY DIFFERENCES
 
-## Encoder
+| Aspect                    | Encoder (Self-Attention)       | Decoder (Masked Self-Attention) |
+|--------------------------|--------------------------------|---------------------------------|
+| What can it see?         | All words                      | Only previous words             |
+| Source of Q, K, V        | All from Encoder               | All from Decoder                |
 
-> understands input
+### Cross Attention Summary
 
-## Decoder
-
-> generates output using:
-
-* previous outputs
-* encoder meaning
-
----
-
-# MOST IMPORTANT DIFFERENCES
-
-| Encoder Attention  | Decoder Masked Attention |
-| ------------------ | ------------------------ |
-| sees all words     | sees only past words     |
-| Q,K,V from encoder | Q,K,V from decoder       |
+| Component | Source   |
+|-----------|----------|
+| Query     | Decoder  |
+| Key       | Encoder  |
+| Value     | Encoder  |
 
 ---
 
-# CROSS ATTENTION SUMMARY
+## FINAL INTUITION
 
-| Component | Source  |
-| --------- | ------- |
-| Q         | Decoder |
-| K         | Encoder |
-| V         | Encoder |
+- **Encoder**: *"What does this input sentence mean?"*
+- **Decoder**: *"What should the next output word be, given what I've generated so far and the input meaning?"*
+
+The Decoder continuously combines:
+1. Previously generated words (via Masked Self-Attention)
+2. Source sentence understanding (via Cross-Attention)
+3. Predicts next token
+
+This is how Transformers perform tasks like **Translation, Summarization, Code Generation**, etc.
 
 ---
 
-# FINAL INTUITION
-
-## Encoder
-
-```text id="7u6g52"
-“What does this sentence mean?”
-```
-
-## Decoder
-
-```text id="sqmb9z"
-“What should the next output word be?”
-```
-
-The decoder continuously:
-
-1. looks at previously generated words
-2. looks at encoder understanding
-3. predicts the next token
-4. repeats until sentence completion
-
-That is the complete working of the Transformer decoder.
-
-```
+**That is the complete working of the Transformer Decoder.**
 ```
